@@ -12,7 +12,7 @@ namespace RPG.Controll
         void Update()
         {
             if (InteractWithCombat()) return;
-            if(InteractWithMovement()) return;
+            if (InteractWithMovement()) return;
         }
 
         private bool InteractWithCombat()
@@ -21,7 +21,7 @@ namespace RPG.Controll
             foreach (RaycastHit hit in hits)
             {
                 CombatTarget target = hit.transform.GetComponent<CombatTarget>();
-                if (target == null) continue;
+                if (!GetComponent<Fighter>().CanAttack(target)) continue;
 
                 if (Input.GetMouseButtonDown(0))
                 {
@@ -38,7 +38,7 @@ namespace RPG.Controll
             bool hasHit = Physics.Raycast(GetMouseRay(), out raycastHit);
             if (hasHit)
             {
-                if(Input.GetMouseButton(0))
+                if (Input.GetMouseButton(0))
                 {
                     GetComponent<Mover>().StartMoveAction(raycastHit.point);
                     return true;

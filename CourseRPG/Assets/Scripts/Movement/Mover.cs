@@ -6,13 +6,15 @@ using RPG.Combat;
 using RPG.Core;
 namespace RPG.Movement
 {
-    public class Mover : MonoBehaviour
+    public class Mover : MonoBehaviour, IAction
     {
         NavMeshAgent navMeshAgent;
+        Animator playerAnimator;
 
         void Start()
         {
             navMeshAgent = GetComponent<NavMeshAgent>();
+            playerAnimator = GetComponent<Animator>();
         }
         void Update()
         {
@@ -22,7 +24,6 @@ namespace RPG.Movement
         public void StartMoveAction(Vector3 point)
         {   
             GetComponent<Scheduler>().StartAction(this);
-            GetComponent<Fighter>().CancelAttack();
             MoveTo(point);
         }
 
@@ -32,7 +33,7 @@ namespace RPG.Movement
             navMeshAgent.isStopped = false;
         }
 
-        public void Stop()
+        public void Cancel()
         {
             navMeshAgent.isStopped = true;
         }
@@ -42,7 +43,8 @@ namespace RPG.Movement
             Vector3 velocity = GetComponent<NavMeshAgent>().velocity;
             Vector3 localVelocity = transform.InverseTransformDirection(velocity);
             float speed = localVelocity.z;
-            GetComponent<Animator>().SetFloat("forwardSpeed", speed);
+
+            playerAnimator.SetFloat("forwardSpeed", speed);
         }
     }
 }
