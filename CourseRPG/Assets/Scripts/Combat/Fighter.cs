@@ -10,14 +10,27 @@ namespace RPG.Combat
     {
         Health target;
         Mover playerMover;
-        float timeSinceLastAttack = 0;
-        [SerializeField] float rangeDistance = 2f;
+        float timeSinceLastAttack = Mathf.Infinity;
         [SerializeField] float timeBetweenAttacks = 0.25f;
-        [SerializeField] float weaponDamage = 30f;
+        [SerializeField] Transform rightHandTransform = null;
+        [SerializeField] Transform leftHandTransform = null;
+        [SerializeField] Weapon defaultWeapon = null;
+        Weapon currentWeapon = null;
+
         public void Start()
         {
             playerMover = GetComponent<Mover>();
+            EquipWeapon(defaultWeapon);
         }
+
+        public void EquipWeapon(Weapon weapon)
+        {
+            currentWeapon = weapon;
+            Animator animator = GetComponent<Animator>();
+            weapon.Spawn(rightHandTransform, leftHandTransform, animator);
+
+        }
+
         public void Update()
         {
             timeSinceLastAttack += Time.deltaTime;
@@ -25,9 +38,9 @@ namespace RPG.Combat
             if (target.IsDead()) return;
 
             float distanceToTarget = Vector3.Distance(target.transform.position, gameObject.transform.position);
-            if (distanceToTarget >= rangeDistance)
+            if (distanceToTarget >= currentWeapon.GetWeaponRange())
             {
-                playerMover.MoveTo(target.transform.position);
+                playerMover.MoveTo(target.transform.position, 1f);
             }
             else
             {
@@ -53,14 +66,14 @@ namespace RPG.Combat
             GetComponent<Animator>().SetTrigger("attack");
         }
 
-        public bool CanAttack(CombatTarget combatTarget)
+        public bool CanAttack(GameObject combatTarget)
         {
-            if(combatTarget == null) return false;
+            if (combatTarget == null) return false;
             Health targetToTest = combatTarget.GetComponent<Health>();
             return targetToTest != null && !targetToTest.IsDead();
         }
 
-        public void Attack(CombatTarget combatTarget)
+        public void Attack(GameObject combatTarget)
         {
             GetComponent<Scheduler>().StartAction(this);
             target = combatTarget.GetComponent<Health>();
@@ -70,6 +83,7 @@ namespace RPG.Combat
         {
             StopAttack();
             target = null;
+            GetComponent<Mover>().Cancel();
         }
 
         private void StopAttack()
@@ -79,14 +93,22 @@ namespace RPG.Combat
         }
 
         // Animation Event
-        void Hit()
+        public void Hit()
         {
-            if(target == null)
+            if (target == null) return;
+            if (currentWeapon.hasProjectile())
             {
-                print("Misle");
-                return;
+                currentWeapon.LaunchProjectile(rightHandTransform, leftHandTransform, target);
             }
-            target.TakeDamage(weaponDamage);
+            else
+            {
+                target.TakeDamage(currentWeapon.GetWeaponDamage());
+            }
+        }
+
+        public void Shoot()
+        {
+            Hit();
         }
     }
 }
